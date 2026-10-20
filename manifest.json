@@ -1,0 +1,10 @@
+{
+  "id": "weadu-rsa-lint",
+  "name": "WeAdU RSA Lint",
+  "version": "1.0.0",
+  "minAppVersion": "1.5.0",
+  "description": "Count Google Ads headlines, descriptions, and paths, then recombine words you already typed. No model and no network.",
+  "author": "WeAdU",
+  "authorUrl": "https://weadu.com",
+  "isDesktopOnly": false
+}
