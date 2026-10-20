@@ -3,7 +3,7 @@
   "name": "WeAdU RSA Lint",
   "version": "1.0.0",
   "minAppVersion": "1.5.0",
-  "description": "Count Google Ads headlines, descriptions, and paths, then recombine words you already typed. No model and no network.",
+  "description": "Check Google Ads headline and description lengths, flag common issues, and recombine words you already typed into candidates. No model and no network.",
   "author": "WeAdU",
   "authorUrl": "https://weadu.com",
   "isDesktopOnly": false
