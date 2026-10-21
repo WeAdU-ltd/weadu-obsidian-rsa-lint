@@ -118,6 +118,9 @@ test("emoji are refused and counted as one wide character", function () {
   assert.equal(rsa.googleAdsWidth("👨‍👩‍👧"), 2, "ZWJ family is one emoji");
   assert.equal(rsa.googleAdsWidth("🇫🇷"), 2, "a flag is one emoji");
   assert.equal(rsa.googleAdsWidth("👍🏽"), 2, "skin tone is part of the emoji");
+  assert.equal(rsa.hasEmoji("Step 1️⃣ today"), true, "keycap emoji is flagged");
+  assert.equal(rsa.googleAdsWidth("1️⃣"), 2, "keycap emoji counts as one wide character");
+  assert.equal(rsa.hasEmoji("Step 1 today"), false);
   const r = rsa.checkAd(["Headlines:", "- Super offre 👍 ici", "- Two", "- Three", "Descriptions:", "- Made in France 🇫🇷.", "- Plain text."].join("\n"));
   assert.deepEqual(r.assets[0].issues.map((i) => i.code), ["emoji"]);
   assert.deepEqual(r.assets[3].issues.map((i) => i.code), ["emoji"]);

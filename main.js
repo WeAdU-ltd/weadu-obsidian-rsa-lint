@@ -62,7 +62,7 @@ function charWidth(ch) {
   const wide = cp >= 4352 && cp <= 4447 || cp >= 11904 && cp <= 40959 || cp >= 44032 && cp <= 55203 || cp >= 63744 && cp <= 64255 || cp >= 65040 && cp <= 65049 || cp >= 65072 && cp <= 65135 || cp >= 65280 && cp <= 65376 || cp >= 65504 && cp <= 65510;
   return wide ? 2 : 1;
 }
-var EMOJI_RE = /(?![©®™])\p{Extended_Pictographic}|\p{Regional_Indicator}/u;
+var EMOJI_RE = /(?![©®™])\p{Extended_Pictographic}|\p{Regional_Indicator}|\u20E3/u;
 var segmenter = new Intl.Segmenter(void 0, { granularity: "grapheme" });
 function googleAdsWidth(text) {
   let width = 0;

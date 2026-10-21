@@ -72,7 +72,7 @@ function charWidth(ch: string): number {
 }
 
 // ©, ® and ™ are Extended_Pictographic in Unicode but allowed by Google Ads.
-const EMOJI_RE = /(?![©®™])\p{Extended_Pictographic}|\p{Regional_Indicator}/u;
+const EMOJI_RE = /(?![©®™])\p{Extended_Pictographic}|\p{Regional_Indicator}|\u20E3/u;
 const segmenter = new Intl.Segmenter(undefined, { granularity: "grapheme" });
 
 /**
