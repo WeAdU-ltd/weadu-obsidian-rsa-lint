@@ -1,9 +1,9 @@
 {
   "id": "weadu-rsa-lint",
   "name": "WeAdU RSA Lint",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "minAppVersion": "1.5.0",
-  "description": "Check Google Ads headline and description lengths, flag common issues, and recombine words you already typed into candidates. No model and no network.",
+  "description": "Check Google Ads responsive search ads written in your notes: 3 to 15 headlines, 2 to 4 descriptions, lengths, duplicates, and common policy issues. Local only.",
   "author": "WeAdU",
   "authorUrl": "https://weadu.com",
   "isDesktopOnly": false

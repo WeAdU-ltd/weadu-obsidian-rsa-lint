@@ -1,3 +1,16 @@
-.weadu-rsa-modal h2 {
-  margin-top: 0;
+.weadu-rsa-report table {
+  width: 100%;
+  font-size: var(--font-ui-small);
+}
+.weadu-rsa-report td {
+  vertical-align: top;
+}
+.weadu-rsa-error {
+  color: var(--text-error);
+}
+.weadu-rsa-warning {
+  color: var(--text-warning);
+}
+.weadu-rsa-summary {
+  font-weight: var(--font-semibold);
 }

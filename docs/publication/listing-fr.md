@@ -6,16 +6,17 @@ WeAdU RSA Lint
 
 ## Description courte
 
-Vérifie la longueur des titres et descriptions Google Ads, signale les problèmes courants et recombine les mots déjà saisis en propositions. Sans modèle d'IA ni réseau.
+Vérifie les annonces responsives Google Ads écrites dans vos notes : 3 à 15 titres, 2 à 4 descriptions, longueurs, doublons et problèmes éditoriaux courants. En local.
 
 ## Description longue
 
-WeAdU RSA Lint vérifie les lignes de vos annonces responsives sur le Réseau de Recherche pendant que vous les rédigez dans Obsidian.
+WeAdU RSA Lint vérifie une annonce responsive sur le Réseau de Recherche rédigée dans Obsidian, avant de la coller dans Google Ads.
 
-- Vérifier les lignes : sélectionnez vos lignes et obtenez, pour chacune, sa largeur par rapport à la limite d'un titre (30) ou d'une description (90), ainsi que des signalements pour un point d'exclamation dans un titre, une ponctuation répétée, un numéro de téléphone, un mot en capitales ou un superlatif comme « best ».
-- Construire des propositions à partir d'un brief : saisissez un produit, un bénéfice, une offre facultative et un appel à l'action. Le plugin recombine uniquement ces mots en propositions de titres et de descriptions, coupées à la limite sur une fin de mot. Rien n'est inventé.
+- Écrivez l'annonce dans un bloc de code `rsa`, avec des lignes Titres:, Descriptions: et Chemins: explicites. Rien n'est deviné d'après la longueur d'une ligne.
+- Le rapport vérifie 3 à 15 titres, 2 à 4 descriptions, au plus 2 chemins, les limites de 30, 90 et 15 caractères, les doublons, le point d'exclamation dans un titre et la ponctuation répétée, et signale les numéros de téléphone (hors dates), les mots en capitales et les superlatifs.
+- Une commande vérifie la sélection, le bloc `rsa` ou la note, et ouvre le rapport dans une fenêtre. Le plugin ne modifie jamais vos notes.
 
-Les caractères chinois, japonais et coréens comptent double. Les largeurs sont une estimation locale, pas une validation par Google.
+Les caractères chinois, japonais et coréens comptent double. Un rapport sans erreur est un contrôle local, pas une validation par Google.
 
 Aucun modèle d'IA, aucune requête réseau, aucune collecte de données. Gratuit et open source (licence MIT), conçu par WeAdU.
 

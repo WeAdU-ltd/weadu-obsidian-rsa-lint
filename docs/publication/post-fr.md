@@ -10,8 +10,9 @@ Bonjour à tous,
 
 Je partage un petit plugin gratuit pour ceux qui rédigent leurs annonces Google Ads dans Obsidian.
 
-- **Lint ad lines in the selection** indique la largeur de chaque ligne par rapport à la limite de 30 caractères d'un titre ou de 90 caractères d'une description, et signale un point d'exclamation dans un titre, une ponctuation répétée, un numéro de téléphone, un mot en capitales ou un superlatif comme « best ».
-- **Build RSA candidates from a brief** recombine uniquement les mots saisis (produit, bénéfice, offre, appel à l'action) en propositions de titres et de descriptions coupées aux limites. Il n'invente aucun texte.
+- Écrivez l'annonce dans un bloc de code `rsa`, avec des lignes Titres:, Descriptions: et Chemins: explicites. Le bloc affiche un rapport en dessous.
+- Le rapport vérifie 3 à 15 titres et 2 à 4 descriptions, les limites de 30, 90 et 15 caractères (un caractère large compte double), les doublons, le point d'exclamation dans un titre, la ponctuation répétée, et signale les numéros de téléphone, les mots en capitales et les superlatifs comme « meilleur ».
+- Une commande vérifie la sélection, le bloc ou la note, et ouvre le rapport sans modifier la note.
 
 Aucun modèle d'IA, aucune requête réseau, aucune collecte de données. Licence MIT. L'interface est en anglais. Les largeurs sont une estimation locale, pas une validation par Google.
 
