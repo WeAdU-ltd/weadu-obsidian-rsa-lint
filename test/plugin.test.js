@@ -159,7 +159,7 @@ test("lintAdLine flags limits and policy-prone patterns", function () {
   assert.equal(rsa.lintAdLine("x".repeat(31), "auto").role, "description");
 });
 
-test("lintAdLine flags '#1' as a superlative", { todo: "the \\b before #1 never matches after a space, so 'We are #1' is not flagged" }, function () {
+test("lintAdLine flags '#1' as a superlative", function () {
   assert.ok(rsa.lintAdLine("We are #1 in town", "headline").codes.includes("superlative"));
 });
 
