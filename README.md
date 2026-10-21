@@ -37,9 +37,10 @@ Role lines: `Headlines:`, `Descriptions:`, `Paths:` (also `Titres:`, `Chemins:`,
 | Check | Severity |
 | --- | --- |
 | 3 to 15 headlines, 2 to 4 descriptions, at most 2 paths | error |
-| Headline over 30, description over 90, path over 15 (wide characters count as two) | error |
+| Headline over 30, description over 90, path over 15 (text normalized to NFC, so a decomposed accent counts once; wide characters and emoji count as two) | error |
 | Same headline or description twice (case and spaces ignored) | error |
 | `!` in a headline; `!!`, `??`, `...` anywhere; a space in a path | error |
+| An emoji (Google Ads Symbols policy; ©, ® and ™ are allowed) | error |
 | A phone number (9 digits or more; dates are not phone numbers) | warning |
 | A word of 4 or more letters in capitals | warning |
 | A superlative: best, number one, #1, n°1, meilleur | warning |

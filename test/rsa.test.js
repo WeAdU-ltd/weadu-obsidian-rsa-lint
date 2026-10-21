@@ -94,3 +94,31 @@ test("lines without a role are reported, not guessed", function () {
 test("no recombination feature is left", function () {
   assert.equal(rsa.buildRsaCandidates, undefined);
 });
+
+test("a decomposed accent counts as one character (NFC)", function () {
+  const decomposed = "Cafe\u0301 bio"; // e + combining acute accent
+  assert.equal(decomposed.length, 9);
+  assert.equal(rsa.googleAdsWidth(decomposed), 8);
+  assert.equal(rsa.googleAdsWidth("Café bio"), 8);
+  // 30 visible characters with decomposed accents stay within the headline limit, and match their composed duplicate.
+  const head = "e\u0301".repeat(30);
+  const r = rsa.checkAd(["Headlines:", "- " + head, "- " + "é".repeat(30), "- Third one", "Descriptions:", "- One description.", "- Two description."].join("\n"));
+  const first = r.assets[0];
+  assert.equal(first.width, 30);
+  assert.deepEqual(first.issues, []);
+  assert.ok(r.assets[1].issues.some((i) => i.code === "duplicate"));
+});
+
+test("emoji are refused and counted as one wide character", function () {
+  for (const text of ["Super offre 👍 ici", "Made in France 🇫🇷", "Family 👨‍👩‍👧 deals", "Thumbs 👍🏽"]) {
+    assert.equal(rsa.hasEmoji(text), true, text);
+  }
+  assert.equal(rsa.hasEmoji("Free returns, 30 days. #1 © ® ™"), false, "©, ® and ™ are allowed");
+  assert.equal(rsa.googleAdsWidth("👍"), 2);
+  assert.equal(rsa.googleAdsWidth("👨‍👩‍👧"), 2, "ZWJ family is one emoji");
+  assert.equal(rsa.googleAdsWidth("🇫🇷"), 2, "a flag is one emoji");
+  assert.equal(rsa.googleAdsWidth("👍🏽"), 2, "skin tone is part of the emoji");
+  const r = rsa.checkAd(["Headlines:", "- Super offre 👍 ici", "- Two", "- Three", "Descriptions:", "- Made in France 🇫🇷.", "- Plain text."].join("\n"));
+  assert.deepEqual(r.assets[0].issues.map((i) => i.code), ["emoji"]);
+  assert.deepEqual(r.assets[3].issues.map((i) => i.code), ["emoji"]);
+});

@@ -38,6 +38,7 @@ const MESSAGES: Record<string, string> = {
   over_limit: "Too long for this field.",
   empty_asset: "Empty item.",
   headline_exclamation: "Google Ads does not allow an exclamation mark in a headline.",
+  emoji: "Emoji are not allowed in Google Ads text (Symbols policy).",
   repeated_punctuation: "Repeated punctuation (!!, ??, ...) is not allowed.",
   phone_number: "Looks like a phone number: Google Ads asks for a call asset instead.",
   all_caps_word: "A word in capitals: Google Ads allows capitals only for acronyms and codes.",
@@ -70,11 +71,27 @@ function charWidth(ch: string): number {
   return wide ? 2 : 1;
 }
 
-/** Google Ads counts a wide character (Chinese, Japanese, Korean) as two. */
+// ©, ® and ™ are Extended_Pictographic in Unicode but allowed by Google Ads.
+const EMOJI_RE = /(?![©®™])\p{Extended_Pictographic}|\p{Regional_Indicator}/u;
+const segmenter = new Intl.Segmenter(undefined, { granularity: "grapheme" });
+
+/**
+ * Google Ads counts a wide character (Chinese, Japanese, Korean) as two. The text is normalized to NFC first,
+ * so a decomposed accent (e + combining mark, common in text pasted from macOS) counts as one character.
+ * An emoji counts as one wide character (two), even when it is built from several code points
+ * (skin tone, ZWJ family, flag); emoji are refused by Google Ads anyway (see hasEmoji).
+ */
 export function googleAdsWidth(text: string): number {
   let width = 0;
-  for (const ch of Array.from(text)) width += charWidth(ch);
+  for (const { segment } of segmenter.segment(text.normalize("NFC"))) {
+    width += EMOJI_RE.test(segment) ? 2 : charWidth(segment);
+  }
   return width;
+}
+
+/** Google Ads refuses emoji in ad text (Symbols policy). */
+export function hasEmoji(text: string): boolean {
+  return EMOJI_RE.test(text);
 }
 
 const DATE_RE = /^\d{1,4}([-/.])\d{1,2}\1\d{1,4}$/;
@@ -99,6 +116,7 @@ function lineIssues(role: Role, text: string, width: number): Issue[] {
   const out: Issue[] = [];
   if (!text) return [issue("empty_asset", "error")];
   if (width > LIMITS[role]) out.push(issue("over_limit", "error", ` ${width}/${LIMITS[role]}.`));
+  if (hasEmoji(text)) out.push(issue("emoji", "error"));
   if (role === "path") {
     if (/\s/.test(text)) out.push(issue("path_space", "error"));
     return out;
@@ -148,7 +166,7 @@ export function checkAd(text: string, firstLine = 1): AdReport {
       return;
     }
     if (!raw.trim() || /^\s*```/.test(raw)) return;
-    const value = raw.replace(/^\s*(?:[-*+]|\d+[.)])\s+/, "").trim();
+    const value = raw.replace(/^\s*(?:[-*+]|\d+[.)])\s+/, "").trim().normalize("NFC");
     const line = firstLine + index;
     if (!role) {
       unassigned.push(line);

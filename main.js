@@ -38,6 +38,7 @@ var MESSAGES = {
   over_limit: "Too long for this field.",
   empty_asset: "Empty item.",
   headline_exclamation: "Google Ads does not allow an exclamation mark in a headline.",
+  emoji: "Emoji are not allowed in Google Ads text (Symbols policy).",
   repeated_punctuation: "Repeated punctuation (!!, ??, ...) is not allowed.",
   phone_number: "Looks like a phone number: Google Ads asks for a call asset instead.",
   all_caps_word: "A word in capitals: Google Ads allows capitals only for acronyms and codes.",
@@ -61,10 +62,17 @@ function charWidth(ch) {
   const wide = cp >= 4352 && cp <= 4447 || cp >= 11904 && cp <= 40959 || cp >= 44032 && cp <= 55203 || cp >= 63744 && cp <= 64255 || cp >= 65040 && cp <= 65049 || cp >= 65072 && cp <= 65135 || cp >= 65280 && cp <= 65376 || cp >= 65504 && cp <= 65510;
   return wide ? 2 : 1;
 }
+var EMOJI_RE = /(?![©®™])\p{Extended_Pictographic}|\p{Regional_Indicator}/u;
+var segmenter = new Intl.Segmenter(void 0, { granularity: "grapheme" });
 function googleAdsWidth(text) {
   let width = 0;
-  for (const ch of Array.from(text)) width += charWidth(ch);
+  for (const { segment } of segmenter.segment(text.normalize("NFC"))) {
+    width += EMOJI_RE.test(segment) ? 2 : charWidth(segment);
+  }
   return width;
+}
+function hasEmoji(text) {
+  return EMOJI_RE.test(text);
 }
 var DATE_RE = /^\d{1,4}([-/.])\d{1,2}\1\d{1,4}$/;
 function hasPhoneNumber(text) {
@@ -84,6 +92,7 @@ function lineIssues(role, text, width) {
   const out = [];
   if (!text) return [issue("empty_asset", "error")];
   if (width > LIMITS[role]) out.push(issue("over_limit", "error", ` ${width}/${LIMITS[role]}.`));
+  if (hasEmoji(text)) out.push(issue("emoji", "error"));
   if (role === "path") {
     if (/\s/.test(text)) out.push(issue("path_space", "error"));
     return out;
@@ -124,7 +133,7 @@ function checkAd(text, firstLine = 1) {
       return;
     }
     if (!raw.trim() || /^\s*```/.test(raw)) return;
-    const value = raw.replace(/^\s*(?:[-*+]|\d+[.)])\s+/, "").trim();
+    const value = raw.replace(/^\s*(?:[-*+]|\d+[.)])\s+/, "").trim().normalize("NFC");
     const line = firstLine + index;
     if (!role) {
       unassigned.push(line);
