@@ -1,23 +1,52 @@
 # WeAdU RSA Lint
 
-An Obsidian plugin that checks Google Ads responsive search ad (RSA) lines while you draft them: it counts each line against the headline or description limit and flags common issues. It can also recombine the words of a short brief into headline and description candidates.
+An Obsidian plugin that checks a Google Ads responsive search ad (RSA) drafted in a note before you paste it into Google Ads: the number of headlines and descriptions, their lengths, duplicates, and common editorial issues.
 
-It uses no AI model and makes no network request. Nothing leaves your vault.
+It uses no AI model and makes no network request. Nothing leaves your vault, and the plugin never edits your notes.
+
+## Writing an ad
+
+Put each item under an explicit role line. Nothing is guessed from the length of a line.
+
+````markdown
+```rsa
+Headlines:
+- Organic cotton shirts
+- Free returns for 30 days
+- Made in Portugal
+
+Descriptions:
+- Soft shirts in organic cotton, cut and sewn in Portugal.
+- Order today and get free returns for 30 days.
+
+Paths:
+- shirts
+- organic
+```
+````
+
+Role lines: `Headlines:`, `Descriptions:`, `Paths:` (also `Titres:`, `Chemins:`, with or without `:` or a Markdown heading mark). List markers (`-`, `*`, `+`, `1.`) are optional.
 
 ## Features
 
-- **Lint ad lines in the selection**: each non-empty line of 30 characters or fewer is treated as a headline (limit 30), and a longer line as a description (limit 90). The report gives the width, the limit, and these flags:
-  - `over_limit`: a description is longer than 90;
-  - `headline_exclamation`: a headline contains `!`;
-  - `repeated_punctuation`: `!!`, `??`, or `...`;
-  - `phone_number`: the line looks like it contains a phone number;
-  - `all_caps_word`: a word of four or more letters is in capitals;
-  - `superlative`: "best", "number one", "n°1", or "no. 1".
+- **`rsa` code block**: in reading view and live preview, the block shows the ad and its report under it.
+- **Check responsive search ad (selection, block, or note)**: checks the selected text, or the `rsa` block around the cursor, or else the whole note, and opens the report in a window.
 
-  With text selected, the report is inserted below the selection. With nothing selected, the whole note is checked and the report is added at the end.
-- **Build RSA candidates from a brief**: type a product, a benefit, an optional offer, and a call to action. The plugin recombines only those words into headline and description candidates, trims them to the limit at a word boundary, and marks trimmed lines. Nothing is invented. The candidates are inserted below the cursor line.
+### What is checked
 
-Wide characters (Chinese, Japanese, Korean) count as two, as in Google Ads. The widths are a local approximation: a clean report is not an approval from Google.
+| Check | Severity |
+| --- | --- |
+| 3 to 15 headlines, 2 to 4 descriptions, at most 2 paths | error |
+| Headline over 30, description over 90, path over 15 (text normalized to NFC, so a decomposed accent counts once; wide characters and emoji count as two) | error |
+| Same headline or description twice (case and spaces ignored) | error |
+| `!` in a headline; `!!`, `??`, `...` anywhere; a space in a path | error |
+| An emoji (Google Ads Symbols policy; ©, ® and ™ are allowed) | error |
+| A phone number (9 digits or more; dates are not phone numbers) | warning |
+| A word of 4 or more letters in capitals | warning |
+| A superlative: best, number one, #1, n°1, meilleur | warning |
+| A line before any role line | warning |
+
+A clean report is a local check, not an approval from Google.
 
 ## Installation
 
@@ -33,35 +62,23 @@ Once the plugin is listed: open **Settings → Community plugins → Browse**, s
 
 Requires Obsidian 1.5.0 or later.
 
-## Usage
-
-Write one ad line per line, select them, and run **WeAdU RSA Lint: Lint ad lines in the selection** from the command palette. Example result:
-
-```
-## RSA lint
-
-- headline 9/30 [headline_exclamation] Shop now!
-- description 77/90 [ok] Soft cotton shirts for every day, made to last and easy to wash at home today
-```
-
-To get candidates, run **WeAdU RSA Lint: Build RSA candidates from a brief**, fill in the form, and choose **Insert candidates**. A product or a benefit is required.
-
 ## Settings
 
 The plugin has no settings.
 
 ## Privacy
 
-The plugin makes no network request, uses no AI model, and has no telemetry. It reads and edits only the note you run a command on, and it stores nothing.
+The plugin makes no network request, uses no AI model, and has no telemetry. It only reads the note you check, and it stores nothing.
 
 ## Development
 
 ```sh
-node build.js   # rebuild main.js from src.main.js and lib/
-sh test.sh      # run the tests (Node.js 20 or later)
+npm ci
+npm run build   # type-check src/ and bundle main.js with esbuild
+sh test.sh      # type-check, eslint-plugin-obsidianmd, build, tests (Node.js 20 or later)
 ```
 
-`main.js` is generated: edit `src.main.js` or `lib/rsa.js`, then run `node build.js`. The tests fail if `main.js` is out of date.
+`main.js` is generated from `src/main.ts` and `src/rsa.ts`. The tests fail if `main.js` is out of date or if the Obsidian lint reports any error or warning.
 
 ## License
 

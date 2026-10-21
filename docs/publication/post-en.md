@@ -10,8 +10,9 @@ Hi all,
 
 I'd like to share a small free plugin for people who draft Google Ads copy in Obsidian.
 
-- **Lint ad lines in the selection** shows each line's width against the 30-character headline or 90-character description limit, and flags an exclamation mark in a headline, repeated punctuation, a phone number, a word in capitals, or a superlative such as "best".
-- **Build RSA candidates from a brief** recombines only the words you type (product, benefit, offer, call to action) into headline and description candidates trimmed to the limits. It does not invent copy.
+- Write the ad in an `rsa` code block, with explicit Headlines:, Descriptions:, and Paths: lines. The block shows a report under it.
+- The report checks 3 to 15 headlines and 2 to 4 descriptions, the 30/90/15 length limits (wide characters count as two), duplicates, an exclamation mark in a headline, repeated punctuation, and warns about phone numbers, words in capitals, and superlatives such as "best".
+- A command checks the selection, the block, or the note, and opens the report without editing the note.
 
 No AI model, no network request, no telemetry. MIT licensed. The widths are a local approximation, not an approval from Google.
 

@@ -1,255 +1,261 @@
-/* Built by build.js from src.main.js and lib/. Do not edit. */
+/* WeAdU RSA Lint. Built with esbuild from src/. Do not edit. */
 "use strict";
-
-const { Plugin, Modal, Setting, Notice } = require("obsidian");
-const { lintAdLine, buildRsaCandidates } = (function(){var module={exports:{}};var exports=module.exports;
-"use strict";
-
-const LIMITS = { headline: 30, description: 90, path: 15 };
-
-function charWidth(ch) {
-  const cp = ch.codePointAt(0) || 0;
-  if (
-    (cp >= 0x1100 && cp <= 0x115f) ||
-    (cp >= 0x2e80 && cp <= 0x9fff) ||
-    (cp >= 0xac00 && cp <= 0xd7a3) ||
-    (cp >= 0xf900 && cp <= 0xfaff) ||
-    (cp >= 0xfe10 && cp <= 0xfe19) ||
-    (cp >= 0xfe30 && cp <= 0xfe6f) ||
-    (cp >= 0xff00 && cp <= 0xff60) ||
-    (cp >= 0xffe0 && cp <= 0xffe6)
-  ) {
-    return 2;
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __getOwnPropNames = Object.getOwnPropertyNames;
+var __hasOwnProp = Object.prototype.hasOwnProperty;
+var __export = (target, all) => {
+  for (var name in all)
+    __defProp(target, name, { get: all[name], enumerable: true });
+};
+var __copyProps = (to, from, except, desc) => {
+  if (from && typeof from === "object" || typeof from === "function") {
+    for (let key of __getOwnPropNames(from))
+      if (!__hasOwnProp.call(to, key) && key !== except)
+        __defProp(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable });
   }
-  return 1;
-}
+  return to;
+};
+var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
 
+// src/main.ts
+var main_exports = {};
+__export(main_exports, {
+  default: () => WeaduRsaLint,
+  pickSource: () => pickSource
+});
+module.exports = __toCommonJS(main_exports);
+var import_obsidian = require("obsidian");
+
+// src/rsa.ts
+var LIMITS = { headline: 30, description: 90, path: 15 };
+var COUNTS = {
+  headline: { min: 3, max: 15 },
+  description: { min: 2, max: 4 },
+  path: { min: 0, max: 2 }
+};
+var MESSAGES = {
+  over_limit: "Too long for this field.",
+  empty_asset: "Empty item.",
+  headline_exclamation: "Google Ads does not allow an exclamation mark in a headline.",
+  emoji: "Emoji are not allowed in Google Ads text (Symbols policy).",
+  repeated_punctuation: "Repeated punctuation (!!, ??, ...) is not allowed.",
+  phone_number: "Looks like a phone number: Google Ads asks for a call asset instead.",
+  all_caps_word: "A word in capitals: Google Ads allows capitals only for acronyms and codes.",
+  superlative: "Superlative (best, number one, #1): Google Ads asks for third-party proof.",
+  duplicate: "Same text as another item of this type: Google Ads rejects duplicates.",
+  path_space: "A display path cannot contain spaces.",
+  too_few_headline: "At least 3 headlines are required.",
+  too_many_headline: "At most 15 headlines are allowed.",
+  too_few_description: "At least 2 descriptions are required.",
+  too_many_description: "At most 4 descriptions are allowed.",
+  too_many_path: "At most 2 display paths are allowed.",
+  no_role: "Line without a role: put it under a Headlines:, Descriptions:, or Paths: line."
+};
+function issue(code, severity, detail = "") {
+  var _a;
+  return { code, severity, message: ((_a = MESSAGES[code]) != null ? _a : code) + detail };
+}
+function charWidth(ch) {
+  var _a;
+  const cp = (_a = ch.codePointAt(0)) != null ? _a : 0;
+  const wide = cp >= 4352 && cp <= 4447 || cp >= 11904 && cp <= 40959 || cp >= 44032 && cp <= 55203 || cp >= 63744 && cp <= 64255 || cp >= 65040 && cp <= 65049 || cp >= 65072 && cp <= 65135 || cp >= 65280 && cp <= 65376 || cp >= 65504 && cp <= 65510;
+  return wide ? 2 : 1;
+}
+var EMOJI_RE = /(?![©®™])\p{Extended_Pictographic}|\p{Regional_Indicator}|\u20E3/u;
+var segmenter = new Intl.Segmenter(void 0, { granularity: "grapheme" });
 function googleAdsWidth(text) {
-  const chars = Array.from(String(text || ""));
   let width = 0;
-  for (let i = 0; i < chars.length; i++) width += charWidth(chars[i]);
+  for (const { segment } of segmenter.segment(text.normalize("NFC"))) {
+    width += EMOJI_RE.test(segment) ? 2 : charWidth(segment);
+  }
   return width;
 }
-
-function resolveRole(line, role) {
-  if (role === "headline" || role === "description" || role === "path") return role;
-  const width = googleAdsWidth(line);
-  if (width <= LIMITS.headline) return "headline";
-  return "description";
+function hasEmoji(text) {
+  return EMOJI_RE.test(text);
 }
-
-function lintAdLine(line, role) {
-  const text = String(line == null ? "" : line).trim();
-  const resolved = resolveRole(text, role || "auto");
-  const limit = LIMITS[resolved];
-  const codes = [];
-  if (!text) {
-    codes.push("empty_line");
-    return { role: resolved, text: "", width: 0, limit: limit, codes: codes };
+var DATE_RE = /^\d{1,4}([-/.])\d{1,2}\1\d{1,4}$/;
+function hasPhoneNumber(text) {
+  const re = /\+?\d[\d\s().-]{7,}\d/g;
+  let match;
+  while ((match = re.exec(text)) !== null) {
+    const run = match[0].trim();
+    const digits = run.replace(/\D/g, "").length;
+    if (digits < 9) continue;
+    if (DATE_RE.test(run)) continue;
+    if (run.split(/\s+[-–]\s+|\s+/).every((part) => DATE_RE.test(part) || part === "-")) continue;
+    return true;
   }
-  const width = googleAdsWidth(text);
-  if (width > limit) codes.push("over_limit");
-  if (resolved === "headline" && text.indexOf("!") !== -1) codes.push("headline_exclamation");
-  if (/!{2,}|\?{2,}|\.{3,}/.test(text)) codes.push("repeated_punctuation");
-  if (/(?:\+?\d[\d\s().-]{7,}\d)/.test(text)) codes.push("phone_number");
-  const words = text.split(/\s+/);
-  for (let i = 0; i < words.length; i++) {
-    const letters = words[i].replace(/[^A-Za-z]/g, "");
-    if (letters.length >= 4 && letters === letters.toUpperCase()) {
-      codes.push("all_caps_word");
+  return false;
+}
+function lineIssues(role, text, width) {
+  const out = [];
+  if (!text) return [issue("empty_asset", "error")];
+  if (width > LIMITS[role]) out.push(issue("over_limit", "error", ` ${width}/${LIMITS[role]}.`));
+  if (hasEmoji(text)) out.push(issue("emoji", "error"));
+  if (role === "path") {
+    if (/\s/.test(text)) out.push(issue("path_space", "error"));
+    return out;
+  }
+  if (role === "headline" && text.includes("!")) out.push(issue("headline_exclamation", "error"));
+  if (/!{2,}|\?{2,}|\.{3,}|…/.test(text)) out.push(issue("repeated_punctuation", "error"));
+  if (hasPhoneNumber(text)) out.push(issue("phone_number", "warning"));
+  for (const word of text.split(/\s+/)) {
+    const letters = word.replace(/[^\p{L}]/gu, "");
+    if (letters.length >= 4 && letters === letters.toUpperCase() && letters !== letters.toLowerCase()) {
+      out.push(issue("all_caps_word", "warning", ` (${word})`));
       break;
     }
   }
-  if (/\b(best|number one|no\. 1)\b/i.test(text) || /(^|[^\w#])(#1|n°1)(?![\w])/i.test(text)) codes.push("superlative");
-  return { role: resolved, text: text, width: width, limit: limit, codes: codes };
-}
-
-function cleanPhrase(value) {
-  return String(value == null ? "" : value).trim().replace(/\s+/g, " ");
-}
-
-function fit(text, limit) {
-  const chars = Array.from(text);
-  let width = 0;
-  let end = 0;
-  for (let i = 0; i < chars.length; i++) {
-    const next = charWidth(chars[i]);
-    if (width + next > limit) break;
-    width += next;
-    end = i + 1;
-  }
-  if (end === chars.length) {
-    return { text: chars.join(""), width: width, trimmed: false, midWord: false };
-  }
-  const kept = chars.slice(0, end).join("");
-  const space = kept.lastIndexOf(" ");
-  if (space > 0) {
-    const cut = kept.slice(0, space).trim();
-    return { text: cut, width: googleAdsWidth(cut), trimmed: true, midWord: false };
-  }
-  const hard = kept.trim();
-  return { text: hard, width: googleAdsWidth(hard), trimmed: true, midWord: true };
-}
-
-function pushCandidate(out, seen, role, raw) {
-  const phrase = cleanPhrase(raw);
-  if (!phrase) return;
-  const limit = LIMITS[role];
-  const fitted = fit(phrase, limit);
-  if (!fitted.text) return;
-  const key = role + "\n" + fitted.text;
-  if (seen[key]) return;
-  seen[key] = true;
-  const lint = lintAdLine(fitted.text, role);
-  const codes = [];
-  for (let i = 0; i < lint.codes.length; i++) {
-    if (lint.codes[i] !== "over_limit" && lint.codes[i] !== "empty_line") codes.push(lint.codes[i]);
-  }
-  if (fitted.trimmed) codes.push(fitted.midWord ? "cut_mid_word" : "trimmed");
-  out.push({
-    role: role,
-    text: fitted.text,
-    width: lint.width,
-    limit: limit,
-    codes: codes,
-  });
-}
-
-function buildRsaCandidates(input) {
-  const source = input || {};
-  const product = cleanPhrase(source.product);
-  const benefit = cleanPhrase(source.benefit);
-  const offer = cleanPhrase(source.offer);
-  const cta = cleanPhrase(source.cta);
-  const out = [];
-  const seen = {};
-  pushCandidate(out, seen, "headline", product);
-  if (benefit) {
-    pushCandidate(out, seen, googleAdsWidth(benefit) <= LIMITS.headline ? "headline" : "description", benefit);
-  }
-  pushCandidate(out, seen, "headline", offer);
-  pushCandidate(out, seen, "headline", cta);
-  if (product && cta) pushCandidate(out, seen, "headline", cta + " " + product);
-  if (product && offer) pushCandidate(out, seen, "headline", product + " " + offer);
-  if (benefit && offer && googleAdsWidth(benefit) > LIMITS.headline) {
-    pushCandidate(out, seen, "description", benefit + " " + offer);
+  if (/\b(best|number one|no\. 1|meilleur|meilleure)\b/i.test(text) || /(^|[^\w#])(#1|n°1)(?!\w)/i.test(text)) {
+    out.push(issue("superlative", "warning"));
   }
   return out;
 }
+var HEADER_RE = /^\s*(?:#{1,6}\s*)?(headlines?|titres?|descriptions?|paths?|chemins?|display paths?)\s*:?\s*$/i;
+function roleOf(word) {
+  const w = word.toLowerCase();
+  if (w.startsWith("headline") || w.startsWith("titre")) return "headline";
+  if (w.startsWith("description")) return "description";
+  return "path";
+}
+function normalize(text) {
+  return text.toLowerCase().replace(/\s+/g, " ").trim();
+}
+function checkAd(text, firstLine = 1) {
+  const assets = [];
+  const unassigned = [];
+  let role = null;
+  text.split(/\r?\n/).forEach((raw, index) => {
+    const header = HEADER_RE.exec(raw);
+    if (header) {
+      role = roleOf(header[1]);
+      return;
+    }
+    if (!raw.trim() || /^\s*```/.test(raw)) return;
+    const value = raw.replace(/^\s*(?:[-*+]|\d+[.)])\s+/, "").trim().normalize("NFC");
+    const line = firstLine + index;
+    if (!role) {
+      unassigned.push(line);
+      return;
+    }
+    const width = googleAdsWidth(value);
+    assets.push({ role, text: value, line, width, limit: LIMITS[role], issues: lineIssues(role, value, width) });
+  });
+  const counts = { headline: 0, description: 0, path: 0 };
+  for (const asset of assets) counts[asset.role]++;
+  const issues = [];
+  for (const r of ["headline", "description"]) {
+    if (counts[r] < COUNTS[r].min) issues.push(issue("too_few_" + r, "error", ` (${counts[r]} found)`));
+    if (counts[r] > COUNTS[r].max) issues.push(issue("too_many_" + r, "error", ` (${counts[r]} found)`));
+  }
+  if (counts.path > COUNTS.path.max) issues.push(issue("too_many_path", "error", ` (${counts.path} found)`));
+  if (unassigned.length) issues.push(issue("no_role", "warning", ` Lines: ${unassigned.join(", ")}.`));
+  const seen = /* @__PURE__ */ new Map();
+  for (const asset of assets) {
+    if (asset.role === "path" || !asset.text) continue;
+    const key = asset.role + "\n" + normalize(asset.text);
+    const first = seen.get(key);
+    if (first) asset.issues.push(issue("duplicate", "error", ` (line ${first.line})`));
+    else seen.set(key, asset);
+  }
+  let errors = issues.filter((i) => i.severity === "error").length;
+  let warnings = issues.length - errors;
+  for (const asset of assets) {
+    for (const i of asset.issues) {
+      if (i.severity === "error") errors++;
+      else warnings++;
+    }
+  }
+  return { assets, issues, unassigned, counts, errors, warnings };
+}
+function summary(report) {
+  const n = (count, word) => `${count} ${word}${count === 1 ? "" : "s"}`;
+  const { counts } = report;
+  return `${n(counts.headline, "headline")}, ${n(counts.description, "description")}, ${n(counts.path, "path")}: ${n(report.errors, "error")}, ${n(report.warnings, "warning")}.`;
+}
 
-module.exports = {
-  LIMITS: LIMITS,
-  googleAdsWidth: googleAdsWidth,
-  lintAdLine: lintAdLine,
-  buildRsaCandidates: buildRsaCandidates,
-};
-
-return module.exports;})();
-
-class RsaModal extends Modal {
-  constructor(app, onSubmit) {
+// src/main.ts
+var ROLE_LABEL = { headline: "Headline", description: "Description", path: "Path" };
+function renderReport(el, report) {
+  el.addClass("weadu-rsa-report");
+  el.createEl("p", { cls: "weadu-rsa-summary", text: summary(report) });
+  if (report.issues.length) {
+    const list = el.createEl("ul");
+    for (const row of report.issues) list.createEl("li", { cls: `weadu-rsa-${row.severity}`, text: `${row.severity}: ${row.message}` });
+  }
+  if (!report.assets.length) return;
+  const table = el.createEl("table");
+  const head = table.createEl("thead").createEl("tr");
+  for (const label of ["Line", "Type", "Text", "Length", "Findings"]) head.createEl("th", { text: label });
+  const body = table.createEl("tbody");
+  for (const asset of report.assets) {
+    const tr = body.createEl("tr");
+    tr.createEl("td", { text: String(asset.line) });
+    tr.createEl("td", { text: ROLE_LABEL[asset.role] });
+    tr.createEl("td", { text: asset.text });
+    tr.createEl("td", { text: `${asset.width}/${asset.limit}` });
+    const cell = tr.createEl("td");
+    if (!asset.issues.length) cell.setText("OK");
+    for (const row of asset.issues) cell.createDiv({ cls: `weadu-rsa-${row.severity}`, text: `${row.severity}: ${row.message}` });
+  }
+  el.createEl("p", {
+    cls: "setting-item-description",
+    text: "Lengths count a wide character as two. A local check, not an approval from Google."
+  });
+}
+var ReportModal = class extends import_obsidian.Modal {
+  constructor(app, report) {
     super(app);
-    this.onSubmit = onSubmit;
-    this.values = { product: "", benefit: "", offer: "", cta: "" };
+    this.report = report;
   }
-
   onOpen() {
-    const { contentEl } = this;
-    contentEl.addClass("weadu-rsa-modal");
-    contentEl.createEl("h2", { text: "RSA candidates" });
-    contentEl.createEl("p", {
-      text: "Only the words you type are reused. Nothing is invented, and nothing is sent out of this vault.",
-    });
-    this.field("Product", "product");
-    this.field("Benefit", "benefit");
-    this.field("Offer, only if you want it in the ad", "offer");
-    this.field("Call to action", "cta");
-    const modal = this;
-    new Setting(contentEl).addButton(function (button) {
-      button.setButtonText("Insert candidates").setCta().onClick(function () {
-        if (!modal.values.product.trim() && !modal.values.benefit.trim()) {
-          new Notice("Type a product or a benefit.");
-          return;
-        }
-        modal.onSubmit(modal.values);
-        modal.close();
-      });
-    });
+    this.titleEl.setText("Responsive search ad check");
+    renderReport(this.contentEl, this.report);
   }
-
-  field(name, key) {
-    const modal = this;
-    new Setting(this.contentEl).setName(name).addText(function (text) {
-      text.onChange(function (value) {
-        modal.values[key] = value;
-      });
-    });
-  }
-
   onClose() {
     this.contentEl.empty();
   }
-}
-
-function lintReport(text) {
-  const lines = String(text || "").split(/\r?\n/);
-  const out = ["## RSA lint", ""];
-  let any = false;
-  for (let i = 0; i < lines.length; i++) {
-    if (!lines[i].trim()) continue;
-    any = true;
-    const lint = lintAdLine(lines[i], "auto");
-    const mark = lint.codes.length ? lint.codes.join(", ") : "ok";
-    out.push("- " + lint.role + " " + lint.width + "/" + lint.limit + " [" + mark + "] " + lint.text);
+};
+function pickSource(editor) {
+  const selection = editor.getSelection();
+  if (selection) {
+    const from = editor.getCursor("from");
+    return { text: selection, firstLine: from.line + 1 };
   }
-  if (!any) out.push("No line to lint.");
-  out.push("");
-  out.push("Widths count a wide character (Chinese, Japanese, Korean) as two. This is a local approximation, not an approval from Google.");
-  return out.join("\n");
+  const lines = editor.getValue().split("\n");
+  const cursor = editor.getCursor().line;
+  let open = -1;
+  for (let i = cursor; i >= 0; i--) {
+    if (/^\s*```rsa\s*$/.test(lines[i])) {
+      open = i;
+      break;
+    }
+    if (i !== cursor && /^\s*```/.test(lines[i])) break;
+  }
+  if (open !== -1) {
+    let close = open + 1;
+    while (close < lines.length && !/^\s*```\s*$/.test(lines[close])) close++;
+    if (cursor <= close) return { text: lines.slice(open + 1, close).join("\n"), firstLine: open + 2 };
+  }
+  return { text: lines.join("\n"), firstLine: 1 };
 }
-
-function candidateReport(values) {
-  const candidates = buildRsaCandidates(values);
-  const lines = ["## RSA candidates", ""];
-  if (!candidates.length) lines.push("Nothing to build.");
-  candidates.forEach(function (candidate) {
-    const mark = candidate.codes.length ? " [" + candidate.codes.join(", ") + "]" : "";
-    lines.push("- " + candidate.role + " (" + candidate.width + "/" + candidate.limit + ")" + mark + " " + candidate.text);
-  });
-  return lines.join("\n");
-}
-
-class WeaduRsaLint extends Plugin {
-  async onload() {
+var WeaduRsaLint = class extends import_obsidian.Plugin {
+  onload() {
     this.addCommand({
-      id: "lint-ad-lines",
-      name: "Lint ad lines in the selection",
-      editorCallback: function (editor) {
-        const selected = editor.getSelection();
-        if (selected) {
-          editor.replaceSelection(selected + "\n" + lintReport(selected) + "\n");
-          return;
-        }
-        const report = "\n" + lintReport(editor.getValue()) + "\n";
-        editor.setValue(editor.getValue().replace(/\s*$/, "") + report);
-      },
+      id: "check-ad",
+      name: "Check responsive search ad (selection, block, or note)",
+      editorCallback: (editor) => {
+        const source = pickSource(editor);
+        new ReportModal(this.app, checkAd(source.text, source.firstLine)).open();
+      }
     });
-
-    this.addCommand({
-      id: "build-rsa-candidates",
-      name: "Build RSA candidates from a brief",
-      editorCallback: function (editor) {
-        new RsaModal(this.app, function (values) {
-          const cursor = editor.getCursor();
-          editor.replaceRange("\n" + candidateReport(values) + "\n", {
-            line: cursor.line,
-            ch: editor.getLine(cursor.line).length,
-          });
-        }).open();
-      }.bind(this),
+    this.registerMarkdownCodeBlockProcessor("rsa", (source, el, ctx) => {
+      const info = ctx.getSectionInfo(el);
+      const firstLine = info ? info.lineStart + 2 : 1;
+      const pre = el.createEl("pre");
+      pre.createEl("code", { text: source });
+      renderReport(el.createDiv(), checkAd(source, firstLine));
     });
   }
-}
-
-module.exports = WeaduRsaLint;
-module.exports.default = WeaduRsaLint;
+};
