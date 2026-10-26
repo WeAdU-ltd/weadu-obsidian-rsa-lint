@@ -37,13 +37,24 @@ test("French section names and list markers are accepted", function () {
   assert.deepEqual(r.counts, { headline: 3, description: 2, path: 1 });
 });
 
-test("counts: 3 to 15 headlines, 2 to 4 descriptions, 2 paths", function () {
-  assert.deepEqual(codes(rsa.checkAd(ad(H.slice(0, 2), D.slice(0, 1)))), ["too_few_description", "too_few_headline"]);
+test("counts follow Search specs, and the editor minimum is only a warning", function () {
+  const below = rsa.checkAd(ad(H.slice(0, 2), D.slice(0, 1)));
+  assert.deepEqual(codes(below), ["editor_min_description", "editor_min_headline"]);
+  assert.equal(below.errors, 0);
+  assert.ok(below.issues.every((row) => row.severity === "warning"));
+  const one = rsa.checkAd(ad(H.slice(0, 1), D.slice(0, 1)));
+  assert.deepEqual(codes(one), ["editor_min_description", "editor_min_headline"]);
+  assert.equal(one.errors, 0);
+  const empty = rsa.checkAd("Headlines:\n\nDescriptions:\n");
+  assert.deepEqual(codes(empty), ["too_few_description", "too_few_headline"]);
+  assert.ok(empty.issues.every((row) => row.severity === "error"));
   const many = Array.from({ length: 16 }, (_, i) => "Headline number " + (i + 1));
   const descs = Array.from({ length: 5 }, (_, i) => "Description number " + (i + 1) + ".");
   assert.deepEqual(codes(rsa.checkAd(ad(many, descs, ["a", "b", "c"]))), ["too_many_description", "too_many_headline", "too_many_path"]);
   const max = rsa.checkAd(ad(many.slice(0, 15), descs.slice(0, 4)));
   assert.deepEqual(codes(max), []);
+  const editor = rsa.checkAd(ad(H, D));
+  assert.deepEqual(codes(editor), []);
 });
 
 test("duplicates are errors, ignoring case and spaces", function () {
@@ -74,14 +85,24 @@ test("dates are not phone numbers; real phone numbers are", function () {
 test("policy warnings and errors on a line", function () {
   const r = rsa.checkAd(ad(["Buy now!", "Best shirts in town", "FREE delivery", "We are #1 here", "Item #12 in stock", "Le n°1 du bio"], ["Really??", "Call 01 23 45 67 89 today."]));
   const byText = (t) => r.assets.find((a) => a.text === t).issues.map((i) => i.code);
-  assert.deepEqual(byText("Buy now!"), ["headline_exclamation"]);
+  assert.deepEqual(byText("Buy now!"), []);
   assert.deepEqual(byText("Best shirts in town"), ["superlative"]);
   assert.deepEqual(byText("FREE delivery"), ["all_caps_word"]);
+  const caps = r.assets.find((a) => a.text === "FREE delivery").issues[0];
+  assert.match(caps.message, /acronym or a code/);
+  assert.doesNotMatch(caps.message, /not allowed|does not allow|forbidden/i);
   assert.deepEqual(byText("We are #1 here"), ["superlative"]);
   assert.deepEqual(byText("Item #12 in stock"), []);
   assert.deepEqual(byText("Le n°1 du bio"), ["superlative"]);
   assert.deepEqual(byText("Really??"), ["repeated_punctuation"]);
   assert.deepEqual(byText("Call 01 23 45 67 89 today."), ["phone_number"]);
+  const punct = rsa.checkAd(ad(["Ends with an ellipsis...", "One mark!", "No way!!"], ["Wait\u2026", "Too many dots...."]));
+  const punctBy = (t) => punct.assets.find((a) => a.text === t).issues.map((i) => i.code);
+  assert.deepEqual(punctBy("Ends with an ellipsis..."), []);
+  assert.deepEqual(punctBy("One mark!"), []);
+  assert.deepEqual(punctBy("No way!!"), ["repeated_punctuation"]);
+  assert.deepEqual(punctBy("Wait\u2026"), []);
+  assert.deepEqual(punctBy("Too many dots...."), ["repeated_punctuation"]);
 });
 
 test("lines without a role are reported, not guessed", function () {

@@ -28,27 +28,30 @@ export interface AdReport {
 }
 
 export const LIMITS: Record<Role, number> = { headline: 30, description: 90, path: 15 };
-export const COUNTS: Record<Role, { min: number; max: number }> = {
-  headline: { min: 3, max: 15 },
-  description: { min: 2, max: 4 },
+// min/max follow Search campaign specs for a responsive search ad (1 to 15 headlines, 1 to 4 descriptions).
+// editorMin is the count the responsive search ad editor asks for before Save (3 headlines, 2 descriptions).
+export const COUNTS: Record<Role, { min: number; max: number; editorMin?: number }> = {
+  headline: { min: 1, max: 15, editorMin: 3 },
+  description: { min: 1, max: 4, editorMin: 2 },
   path: { min: 0, max: 2 },
 };
 
 const MESSAGES: Record<string, string> = {
   over_limit: "Too long for this field.",
   empty_asset: "Empty item.",
-  headline_exclamation: "Google Ads does not allow an exclamation mark in a headline.",
   emoji: "Emoji are not allowed in Google Ads text (Symbols policy).",
-  repeated_punctuation: "Repeated punctuation (!!, ??, ...) is not allowed.",
+  repeated_punctuation: "Punctuation repeated in a row (!! or ??) is not allowed. One exclamation mark, and an ellipsis (...), are allowed.",
   phone_number: "Looks like a phone number: Google Ads asks for a call asset instead.",
-  all_caps_word: "A word in capitals: Google Ads allows capitals only for acronyms and codes.",
+  all_caps_word: "All capitals. Keep this word if it is an acronym or a code. If it is not, use sentence case.",
   superlative: "Superlative (best, number one, #1): Google Ads asks for third-party proof.",
   duplicate: "Same text as another item of this type: Google Ads rejects duplicates.",
   path_space: "A display path cannot contain spaces.",
-  too_few_headline: "At least 3 headlines are required.",
+  too_few_headline: "At least 1 headline is required.",
   too_many_headline: "At most 15 headlines are allowed.",
-  too_few_description: "At least 2 descriptions are required.",
+  editor_min_headline: "The responsive search ad editor asks for at least 3 headlines before Save. Search specs allow 1 to 15.",
+  too_few_description: "At least 1 description is required.",
   too_many_description: "At most 4 descriptions are allowed.",
+  editor_min_description: "The responsive search ad editor asks for at least 2 descriptions before Save. Search specs allow 1 to 4.",
   too_many_path: "At most 2 display paths are allowed.",
   no_role: "Line without a role: put it under a Headlines:, Descriptions:, or Paths: line.",
 };
@@ -121,8 +124,8 @@ function lineIssues(role: Role, text: string, width: number): Issue[] {
     if (/\s/.test(text)) out.push(issue("path_space", "error"));
     return out;
   }
-  if (role === "headline" && text.includes("!")) out.push(issue("headline_exclamation", "error"));
-  if (/!{2,}|\?{2,}|\.{3,}|…/.test(text)) out.push(issue("repeated_punctuation", "error"));
+  // A single "!" and an ellipsis ("..." or "…") match the punctuation policy. "!!" and "??" do not.
+  if (/!{2,}|\?{2,}|\.{4,}/.test(text)) out.push(issue("repeated_punctuation", "error"));
   if (hasPhoneNumber(text)) out.push(issue("phone_number", "warning"));
   for (const word of text.split(/\s+/)) {
     const letters = word.replace(/[^\p{L}]/gu, "");
@@ -180,8 +183,12 @@ export function checkAd(text: string, firstLine = 1): AdReport {
   for (const asset of assets) counts[asset.role]++;
   const issues: Issue[] = [];
   for (const r of ["headline", "description"] as Role[]) {
-    if (counts[r] < COUNTS[r].min) issues.push(issue("too_few_" + r, "error", ` (${counts[r]} found)`));
-    if (counts[r] > COUNTS[r].max) issues.push(issue("too_many_" + r, "error", ` (${counts[r]} found)`));
+    const rule = COUNTS[r];
+    if (counts[r] < rule.min) issues.push(issue("too_few_" + r, "error", ` (${counts[r]} found)`));
+    else if (rule.editorMin !== undefined && counts[r] < rule.editorMin) {
+      issues.push(issue("editor_min_" + r, "warning", ` (${counts[r]} found)`));
+    }
+    if (counts[r] > rule.max) issues.push(issue("too_many_" + r, "error", ` (${counts[r]} found)`));
   }
   if (counts.path > COUNTS.path.max) issues.push(issue("too_many_path", "error", ` (${counts.path} found)`));
   if (unassigned.length) issues.push(issue("no_role", "warning", ` Lines: ${unassigned.join(", ")}.`));

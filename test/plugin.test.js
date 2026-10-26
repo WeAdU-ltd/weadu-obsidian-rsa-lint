@@ -51,7 +51,7 @@ test("command checks the selection and opens a report without editing the note",
   assert.equal(modal.titleEl.text, "Responsive search ad check");
   const text = modal.contentEl.allText();
   assert.match(text, /3 headlines, 2 descriptions, 0 paths: 1 error, 0 warnings\./);
-  assert.match(text, /\n8\nDescription\nOrder today!!\n13\/90\nerror: Repeated punctuation/);
+  assert.match(text, /\n8\nDescription\nOrder today!!\n13\/90\nerror: Punctuation repeated in a row/);
 });
 
 test("command checks the rsa block under the cursor", async function () {
