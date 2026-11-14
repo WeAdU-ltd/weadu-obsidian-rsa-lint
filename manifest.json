@@ -1,9 +1,9 @@
 {
   "id": "weadu-rsa-lint",
   "name": "WeAdU RSA Lint",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "minAppVersion": "1.5.0",
-  "description": "Check Google Ads responsive search ads written in your notes: 3 to 15 headlines, 2 to 4 descriptions, lengths, duplicates, and common policy issues. Local only.",
+  "description": "Check a responsive search ad in a note. Specs allow 1 to 15 headlines and 1 to 4 descriptions; the editor asks for 3 and 2 before Save. Lengths and punctuation. Local only.",
   "author": "WeAdU",
   "authorUrl": "https://weadu.com",
   "isDesktopOnly": false

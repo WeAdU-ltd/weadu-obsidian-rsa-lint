@@ -1,5 +1,7 @@
 # Obsidian Forum post (English)
 
+Draft. Do not publish until Jeff has approved this release.
+
 Category: Share & showcase. Tag: plugin-release, if the tag picker offers it.
 
 ---
@@ -11,7 +13,7 @@ Hi all,
 I'd like to share a small free plugin for people who draft Google Ads copy in Obsidian.
 
 - Write the ad in an `rsa` code block, with explicit Headlines:, Descriptions:, and Paths: lines. The block shows a report under it.
-- The report checks 3 to 15 headlines and 2 to 4 descriptions, the 30/90/15 length limits (wide characters count as two), duplicates, an exclamation mark in a headline, repeated punctuation, and warns about phone numbers, words in capitals, and superlatives such as "best".
+- The report follows the Search specs: 1 to 15 headlines and 1 to 4 descriptions. Fewer than 3 headlines or 2 descriptions is a warning, because the editor asks for those counts before Save. It also checks the 30/90/15 length limits (wide characters count as two), duplicates, and repeated marks (`!!`, `??`). One exclamation mark and an ellipsis are allowed. It warns about phone numbers, words in capitals (an acronym is not called forbidden), and superlatives such as "best".
 - A command checks the selection, the block, or the note, and opens the report without editing the note.
 
 No AI model, no network request, no telemetry. MIT licensed. The widths are a local approximation, not an approval from Google.
