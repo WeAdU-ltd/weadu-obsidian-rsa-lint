@@ -1,5 +1,7 @@
 # Obsidian Forum post (English)
 
+Draft. Do not publish until Jeff has approved this release.
+
 Category: Share & showcase. Tag: plugin-release, if the tag picker offers it.
 
 ---

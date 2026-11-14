@@ -44,7 +44,7 @@ Role lines: `Headlines:`, `Descriptions:`, `Paths:` (also `Titres:`, `Chemins:`,
 | An emoji (Google Ads Symbols policy; ©, ® and ™ are allowed) | error |
 | A phone number (9 digits or more; dates are not phone numbers) | warning |
 | A word of 4 or more letters in capitals. An acronym or a code can stay; the warning does not call it forbidden | warning |
-| A superlative: best, number one, #1, n°1, meilleur | warning |
+| A superlative: best, number one, n°1, meilleur | warning |
 | A line before any role line | warning |
 
 One exclamation mark is allowed. An ellipsis (`...` or `…`) is allowed: the punctuation policy bans marks repeated in a row, such as `!!`, and Google itself shortens some ads with an ellipsis.
